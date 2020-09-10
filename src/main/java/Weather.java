@@ -24,7 +24,7 @@ public class Weather {
         this.client = new OkHttpClient();
     }
 
-    public double getWeatherFrom(String city) {
+    public String getWeatherFrom(String city) {
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
                 .url("http://api.openweathermap.org/data/2.5/weather?q="+ city + ",nl&APPID=" + APIKey)
@@ -44,7 +44,8 @@ public class Weather {
         }
         JSONObject Jobject = new JSONObject(jsonData);
         JSONObject mainJson = Jobject.getJSONObject("main");
-        double weather = Math.round((double) mainJson.get("temp") - 273.15);
-        return weather;
+        double weather = ((double) mainJson.get("temp") - 273.15);
+        String rounded = String.format("%.1f", weather);
+        return rounded;
     }
 }

@@ -46,9 +46,8 @@ public class MainHandler extends ListenerAdapter {
 
         String message = event.getMessage().getContentDisplay();
 
-        String celcius = String.valueOf(this.weatherHandler.getWeatherFrom(message));
-        System.out.println(celcius);
-        event.getChannel().sendMessage(celcius).queue();
+        String celcius = this.weatherHandler.getWeatherFrom(message);
+        event.getChannel().sendMessage(celcius + " graden").queue();
 
 //        for (String key : this.messages.keySet()) {
 //            if (message.equals(key)) {
