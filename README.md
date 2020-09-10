@@ -1,3 +1,3 @@
 ### Epig Gamer Bot
 
-#Made by: Menno Bil
+Made by: Menno Bil
