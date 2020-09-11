@@ -4,6 +4,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import javax.security.auth.login.LoginException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class MainHandler extends ListenerAdapter {
@@ -12,7 +13,7 @@ public class MainHandler extends ListenerAdapter {
     private static final String DISCORDTOKEN = "";
     private static JDABuilder builder;
 
-    private final String PREFIX = "gamer ";
+    private final String PREFIX = "gamer ";     // Start command voor de bot
     private HashMap<String, Message> messages;
     private APIHandler apiHandler;
 
@@ -36,9 +37,13 @@ public class MainHandler extends ListenerAdapter {
     }
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
+    public void onMessageReceived(MessageReceivedEvent event) {     // Word aangeroepen als een bericht binnenkomt
 
-        if (event.getAuthor().isBot()) {    // Tegen oneindige loops
+        if (event.getAuthor().isBot()) {        // Tegen oneindige loops
+            return;
+        }
+
+        if (!event.getChannel().getName().equals("bot-commands")) {     // Hierdoor werkt de bot alleen in de bot-commands channel
             return;
         }
 
@@ -52,12 +57,12 @@ public class MainHandler extends ListenerAdapter {
 
         String message = event.getMessage().getContentDisplay().toLowerCase().substring(this.PREFIX.length());
 
-        handleMessages(event, message);
+        handleMessage(event, message);
     }
 
-    private void handleMessages(MessageReceivedEvent event, String message) {
+    private void handleMessage(MessageReceivedEvent event, String message) {
         if (message.contains("image ")) {        // Voor random images
-            int id = Integer.parseInt(message.substring(6));
+            String id = message.substring(6);
             String memeURL = APIHandler.getRandomImage(id);
             event.getChannel().sendMessage(memeURL).queue();
             return;
@@ -79,16 +84,34 @@ public class MainHandler extends ListenerAdapter {
     }
 
     private void setMessages() {
-        this.messages = new HashMap<>();
+        this.messages = new HashMap<>();        // Alle mogelijke commands
 
-        this.messages.put("ping", new Message(MessageType.TextMessage, "no :("));
-        this.messages.put("temp ", new Message(MessageType.WeatherMessage, "In <city> is het <celsius> graden"));
-        this.messages.put("image ", new Message(MessageType.RandomMessage, "<ImageURL>"));
+        this.messages.put("ping", new Message(MessageType.TextMessage, new String[]{"No :(", "Pong!", "Oke boomer"}, "Pong"));
+
+        this.messages.put("temp ", new Message(MessageType.WeatherMessage, "In <city> is het <celsius> graden", "Returns the temperature of the chosen city (only in the Netherlands) by typing a city after the command"));
+
+        this.messages.put("image ", new Message(MessageType.TextMessage, "<ImageURL>", "Returns a chosen/random image by typing a number or \"random\" behind the command"));
 
 
-        /*
+        String munt = "https://www.budgetgift.nl/604/0/0/1/ffffff00/441842e6/a19c84e94684a0c00a7658d0be40c75b26e02e700df22c7459be5c4cfcd6438b/1-euro-munt.png";
+        String kop = "https://lh3.googleusercontent.com/proxy/b6R7JJIRDsHo93TPOCtRovf1Ia26S899o_a6qVAB2dqxLNebwYkHUU3_GlDsas1PhBh5kJuD008gDtzQn-clQGhNDusN9T18reReGM9s-bO6VVijn8-eV6aL7xiX3LxulscR66R2TTyZGpHG";
+        String kant = "https://upload.wikimedia.org/wikipedia/commons/6/67/1_oz_Vienna_Philharmonic_2017_edge.png";
+        this.messages.put("coin flip", new Message(MessageType.TextMessage, new String[]{munt, munt, munt, munt, munt, kop, kop, kop, kop, kop, kant}, "Returns heads or tails"));
+
+
+
+        String allCommands = "**ALL COMMANDS**\n----------------------------------------------------------------------------\n<Activation keyword = \"" + this.PREFIX +"\">\n\n";
+        for (String activationString : this.messages.keySet()) {
+            allCommands += activationString.toUpperCase() + "   =   " + this.messages.get(activationString).getDescription() + "\n";
+        }
+
+
+        this.messages.put("all commands", new Message(MessageType.TextMessage, allCommands, "Shows all the commands"));
+
+
+        /*  TO DO:
             - Help command
-            - All commands command
+            - Mensen kicken als ze schelden
          */
     }
 }

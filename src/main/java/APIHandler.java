@@ -3,14 +3,18 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.json.JSONObject;
 
+import java.util.Random;
+
 public class APIHandler {
 
     private static final String WeatherAPIKey = "";
 
     private OkHttpClient client;
+    private static Random random;
 
     public APIHandler() {
         this.client = new OkHttpClient();
+        this.random = new Random();
     }
 
     public static String getWeatherFrom(String city) {
@@ -28,10 +32,18 @@ public class APIHandler {
         }
     }
 
-    public static String getRandomImage(int id) {
+    public static String getRandomImage(String id) {
         try {
 
-            JSONObject jObject = getAPI("http://alpha-meme-maker.herokuapp.com/memes/" + id + "/");
+            int number;
+
+            if (id.equals("random")) {
+                number = random.nextInt(259);
+            } else {
+                number = Integer.parseInt(id);
+            }
+
+            JSONObject jObject = getAPI("http://alpha-meme-maker.herokuapp.com/memes/" + number + "/");
             JSONObject dataJson = jObject.getJSONObject("data");
             String imageURL = String.valueOf(dataJson.get("image"));
             return imageURL;
