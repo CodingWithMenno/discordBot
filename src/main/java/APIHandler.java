@@ -16,7 +16,7 @@ import java.net.http.HttpResponse;
 
 public class APIHandler {
 
-    private static final String WeatherAPIKey = "7b1198570c69d548131bb8b6e07024c1";
+    private static final String WeatherAPIKey = "";
 
     private OkHttpClient client;
 
