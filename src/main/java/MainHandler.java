@@ -9,17 +9,17 @@ import java.util.HashMap;
 public class MainHandler extends ListenerAdapter {
 
     //Discord stuff
-    private static final String TOKEN = "";
+    private static final String DISCORDTOKEN = "";
     private static JDABuilder builder;
 
-    private final String PREFIX = "+";
+    private final String PREFIX = "gamer ";
     private HashMap<String, Message> messages;
     private APIHandler apiHandler;
 
 
     public static void main(String[] args) {
         builder = new JDABuilder(AccountType.BOT);
-        builder.setToken(TOKEN);
+        builder.setToken(DISCORDTOKEN);
         MainHandler mainHandler = new MainHandler();
         builder.addEventListener(mainHandler);
 
@@ -44,21 +44,27 @@ public class MainHandler extends ListenerAdapter {
 
         System.out.println("Message received from: " + event.getAuthor().getName() + " : " + event.getMessage().getContentDisplay());
 
-        String message = event.getMessage().getContentDisplay().toLowerCase();
+        String prefixMessage = event.getMessage().getContentDisplay().toLowerCase();
 
-        if (!message.startsWith(this.PREFIX)) {
+        if (!prefixMessage.startsWith(this.PREFIX)) {
             return;
         }
 
-        if (message.contains("+random image ")) {        // Voor random images
-            int id = Integer.parseInt(message.substring(14));
+        String message = event.getMessage().getContentDisplay().toLowerCase().substring(this.PREFIX.length());
+
+        handleMessages(event, message);
+    }
+
+    private void handleMessages(MessageReceivedEvent event, String message) {
+        if (message.contains("image ")) {        // Voor random images
+            int id = Integer.parseInt(message.substring(6));
             String memeURL = APIHandler.getRandomImage(id);
             event.getChannel().sendMessage(memeURL).queue();
             return;
         }
 
-        if (message.contains("+temp ")) {       // Voor de temperatuur berichten
-            String stad = message.substring(6);
+        if (message.contains("temp ")) {       // Voor de temperatuur berichten
+            String stad = message.substring(5);
             String goodCity = stad.substring(0, 1).toUpperCase() + stad.substring(1);
             event.getChannel().sendMessage(APIHandler.getWeatherFrom(goodCity)).queue();
             return;
@@ -75,9 +81,9 @@ public class MainHandler extends ListenerAdapter {
     private void setMessages() {
         this.messages = new HashMap<>();
 
-        this.messages.put("+ping", new Message(MessageType.TextMessage, "pong"));
-        this.messages.put("+temp ", new Message(MessageType.WeatherMessage, "In <city> is het <celsius> graden"));
-        this.messages.put("+random image", new Message(MessageType.RandomMessage, "<ImageURL>"));
+        this.messages.put("ping", new Message(MessageType.TextMessage, "no :("));
+        this.messages.put("temp ", new Message(MessageType.WeatherMessage, "In <city> is het <celsius> graden"));
+        this.messages.put("image ", new Message(MessageType.RandomMessage, "<ImageURL>"));
 
 
         /*
