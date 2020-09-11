@@ -4,7 +4,9 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import javax.security.auth.login.LoginException;
-import java.util.ArrayList;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 
 public class MainHandler extends ListenerAdapter {
@@ -16,6 +18,7 @@ public class MainHandler extends ListenerAdapter {
     private final String PREFIX = "gamer ";     // Start command voor de bot
     private HashMap<String, Message> messages;
     private APIHandler apiHandler;
+    private PrintWriter printWriter;
 
 
     public static void main(String[] args) {
@@ -61,6 +64,11 @@ public class MainHandler extends ListenerAdapter {
     }
 
     private void handleMessage(MessageReceivedEvent event, String message) {
+
+        if (message.contains("command idea ")) {    // Voor nieuwe command ideeën
+            saveToFile("src/main/resources/CommandSuggestions.txt", event.getAuthor().getName() + " : " + message.substring(13));
+        }
+
         if (message.contains("image ")) {        // Voor random images
             String id = message.substring(6);
             String memeURL = APIHandler.getRandomImage(id);
@@ -76,15 +84,31 @@ public class MainHandler extends ListenerAdapter {
         }
 
         for (String key : this.messages.keySet()) {     // Voor alle niet-speciale berichten
-            if (message.equals(key)) {
+            if (message.contains(key)) {
                 event.getChannel().sendMessage(this.messages.get(key).getAnswerString()).queue();
                 return;
             }
         }
     }
 
+    private void saveToFile(String fileName, String text) {
+        try {
+
+            this.printWriter = new PrintWriter(new FileWriter(fileName, true));
+
+            this.printWriter.append(text + "\n");
+            this.printWriter.close();
+
+            System.out.println("Wrote something to: " + fileName);
+
+        } catch (IOException e) {
+            System.out.println("Something went wrong while writing to the file: " + fileName);
+        }
+    }
+
     private void setMessages() {
         this.messages = new HashMap<>();        // Alle mogelijke commands
+
 
         this.messages.put("ping", new Message(MessageType.TextMessage, new String[]{"No :(", "Pong!", "Oke boomer"}, "Pong"));
 
@@ -92,6 +116,7 @@ public class MainHandler extends ListenerAdapter {
 
         this.messages.put("image ", new Message(MessageType.TextMessage, "<ImageURL>", "Returns a chosen/random image by typing a number or \"random\" behind the command"));
 
+        this.messages.put("command idea ", new Message(MessageType.SuggestionMessage, "Thanks for the suggestion :)", "Type a new command suggestion after this command and maybe it will be implemented"));
 
         String munt = "https://www.budgetgift.nl/604/0/0/1/ffffff00/441842e6/a19c84e94684a0c00a7658d0be40c75b26e02e700df22c7459be5c4cfcd6438b/1-euro-munt.png";
         String kop = "https://lh3.googleusercontent.com/proxy/b6R7JJIRDsHo93TPOCtRovf1Ia26S899o_a6qVAB2dqxLNebwYkHUU3_GlDsas1PhBh5kJuD008gDtzQn-clQGhNDusN9T18reReGM9s-bO6VVijn8-eV6aL7xiX3LxulscR66R2TTyZGpHG";
@@ -99,19 +124,10 @@ public class MainHandler extends ListenerAdapter {
         this.messages.put("coin flip", new Message(MessageType.TextMessage, new String[]{munt, munt, munt, munt, munt, kop, kop, kop, kop, kop, kant}, "Returns heads or tails"));
 
 
-
         String allCommands = "**ALL COMMANDS**\n----------------------------------------------------------------------------\n<Activation keyword = \"" + this.PREFIX +"\">\n\n";
         for (String activationString : this.messages.keySet()) {
             allCommands += activationString.toUpperCase() + "   =   " + this.messages.get(activationString).getDescription() + "\n";
         }
-
-
         this.messages.put("all commands", new Message(MessageType.TextMessage, allCommands, "Shows all the commands"));
-
-
-        /*  TO DO:
-            - Help command
-            - Mensen kicken als ze schelden
-         */
     }
 }

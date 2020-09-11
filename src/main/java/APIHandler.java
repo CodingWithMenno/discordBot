@@ -49,7 +49,7 @@ public class APIHandler {
             return imageURL;
 
         } catch (Exception e) {
-            return "Random meme not found";
+            return "Random image not found";
         }
     }
 
