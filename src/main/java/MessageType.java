@@ -1,4 +1,5 @@
 public enum MessageType {
     TextMessage,
-    WeatherMessage
+    WeatherMessage,
+    RandomMessage
 }
