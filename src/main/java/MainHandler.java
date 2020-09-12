@@ -7,6 +7,7 @@ import javax.security.auth.login.LoginException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class MainHandler extends ListenerAdapter {
@@ -19,6 +20,7 @@ public class MainHandler extends ListenerAdapter {
     private HashMap<String, Message> messages;
     private APIHandler apiHandler;
     private PrintWriter printWriter;
+    private ArrayList<String> blackListedWords;
 
 
     public static void main(String[] args) {
@@ -36,6 +38,7 @@ public class MainHandler extends ListenerAdapter {
 
     public MainHandler() {
         setMessages();
+        setBlacklistWords();
         this.apiHandler = new APIHandler();
     }
 
@@ -65,8 +68,9 @@ public class MainHandler extends ListenerAdapter {
 
     private void handleMessage(MessageReceivedEvent event, String message) {
 
-        if (message.contains("command idea ")) {    // Voor nieuwe command ideeën
-            saveToFile("src/main/resources/CommandSuggestions.txt", event.getAuthor().getName() + " : " + message.substring(13));
+        if (message.contains("suggestion ")) {    // Voor nieuwe command ideeën
+            String filteredMessage = filterMessage(message.substring(11));
+            saveToFile("src/main/resources/CommandSuggestions.txt", event.getAuthor().getName() + " : " + filteredMessage);
         }
 
         if (message.contains("image ")) {        // Voor random images
@@ -89,6 +93,15 @@ public class MainHandler extends ListenerAdapter {
                 return;
             }
         }
+    }
+
+    private String filterMessage(String message) {
+        for (String blackListWord : this.blackListedWords) {
+            if (message.contains(blackListWord)) {
+                return "BLOCKED MESSAGE";
+            }
+        }
+        return message;
     }
 
     private void saveToFile(String fileName, String text) {
@@ -116,7 +129,7 @@ public class MainHandler extends ListenerAdapter {
 
         this.messages.put("image ", new Message(MessageType.TextMessage, "<ImageURL>", "Returns a chosen/random image by typing a number or \"random\" behind the command"));
 
-        this.messages.put("command idea ", new Message(MessageType.SuggestionMessage, "Thanks for the suggestion :)", "Type a new command suggestion after this command and maybe it will be implemented"));
+        this.messages.put("suggestion ", new Message(MessageType.SuggestionMessage, "Thanks for the suggestion :)", "Type a new command suggestion after this command and maybe it will be implemented"));
 
         String munt = "https://www.budgetgift.nl/604/0/0/1/ffffff00/441842e6/a19c84e94684a0c00a7658d0be40c75b26e02e700df22c7459be5c4cfcd6438b/1-euro-munt.png";
         String kop = "https://lh3.googleusercontent.com/proxy/b6R7JJIRDsHo93TPOCtRovf1Ia26S899o_a6qVAB2dqxLNebwYkHUU3_GlDsas1PhBh5kJuD008gDtzQn-clQGhNDusN9T18reReGM9s-bO6VVijn8-eV6aL7xiX3LxulscR66R2TTyZGpHG";
@@ -129,5 +142,19 @@ public class MainHandler extends ListenerAdapter {
             allCommands += activationString.toUpperCase() + "   =   " + this.messages.get(activationString).getDescription() + "\n";
         }
         this.messages.put("all commands", new Message(MessageType.TextMessage, allCommands, "Shows all the commands"));
+
+        /** TO DO:
+         *  -Easter eggs toevoegen
+         *  -Readme.md verbeteren
+         *  -Message systeem verbeteren (Message abstract maken en meerdere message klassen deze laten overerven) (messagetype enum verwijderen)
+         */
+    }
+
+    private void setBlacklistWords() {
+        this.blackListedWords = new ArrayList<>();
+
+        this.blackListedWords.add("kanker");
+        this.blackListedWords.add("homo");
+        this.blackListedWords.add("tyfus");
     }
 }
