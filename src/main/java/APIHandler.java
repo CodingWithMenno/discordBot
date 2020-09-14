@@ -17,7 +17,7 @@ public class APIHandler {
         this.random = new Random();
     }
 
-    public static String getWeatherFrom(String city) {
+    public String getWeatherFrom(String city) {
         try {
             JSONObject jObject = getAPI("http://api.openweathermap.org/data/2.5/weather?q=" + city + ",nl&APPID=" + WeatherAPIKey);
 
@@ -32,7 +32,7 @@ public class APIHandler {
         }
     }
 
-    public static String getRandomImage(String id) {
+    public String getRandomImage(String id) {
         try {
 
             int number;
@@ -53,7 +53,7 @@ public class APIHandler {
         }
     }
 
-    private static JSONObject getAPI(String url) {
+    private JSONObject getAPI(String url) {
         try {
 
             OkHttpClient client = new OkHttpClient();
