@@ -88,8 +88,7 @@ public class MainHandler extends ListenerAdapter {
         }
 
         if (message[0].equals("image")) {        // Voor random images
-            String id = message[1];
-            String memeURL = this.apiHandler.getRandomImage(id);
+            String memeURL = this.apiHandler.getRandomImage();
             event.getChannel().sendMessage(memeURL).queue();
             return;
         }
@@ -269,12 +268,16 @@ public class MainHandler extends ListenerAdapter {
     private void setMessages() {
         this.messages = new LinkedHashMap<>();        // Alle mogelijke commands
 
+        String munt = "https://www.budgetgift.nl/604/0/0/1/ffffff00/441842e6/a19c84e94684a0c00a7658d0be40c75b26e02e700df22c7459be5c4cfcd6438b/1-euro-munt.png";
+        String kop = "https://external-preview.redd.it/hA47uRmiVowkZy1_3435QpN0h82gh2cLdXdy-Bc5-7Y.gif?format=png8&s=9841751c47a1e8a24b92974a70a1ba7354db789a";
+        String kant = "https://upload.wikimedia.org/wikipedia/commons/6/67/1_oz_Vienna_Philharmonic_2017_edge.png";
+        this.messages.put("coinflip", new Message(new String[]{munt, munt, munt, munt, munt, munt, munt, munt, kop, kop, kop, kop, kop, kop, kop, kop, kant}, "Returns heads or tails"));
 
         this.messages.put("ping", new Message(new String[]{"No :(", "Pong!", "Oke boomer"}, "Pong"));
 
         this.messages.put("temp", new Message("In <city> is het <celsius> graden", "Returns the temperature of the chosen city (only in the Netherlands) by typing a city after the command"));
 
-        this.messages.put("image", new Message("<ImageURL>", "Returns a chosen/random image by typing a number or \"random\" behind the command"));
+        this.messages.put("image", new Message("<ImageURL>", "Returns a random image from the subreddet r/funny"));
 
         this.messages.put("suggestion", new Message("Thanks for the suggestion :)", "Type a new command suggestion after this command and maybe it will be implemented"));
 
@@ -296,17 +299,11 @@ public class MainHandler extends ListenerAdapter {
 
         this.messages.put("m playlist show", new Message("*Shows all songs in your custom playlist*", "Shows all songs in your custom playlist"));
 
-        String munt = "https://www.budgetgift.nl/604/0/0/1/ffffff00/441842e6/a19c84e94684a0c00a7658d0be40c75b26e02e700df22c7459be5c4cfcd6438b/1-euro-munt.png";
-        String kop = "https://external-preview.redd.it/hA47uRmiVowkZy1_3435QpN0h82gh2cLdXdy-Bc5-7Y.gif?format=png8&s=9841751c47a1e8a24b92974a70a1ba7354db789a";
-        String kant = "https://upload.wikimedia.org/wikipedia/commons/6/67/1_oz_Vienna_Philharmonic_2017_edge.png";
-        this.messages.put("coinFlip", new Message(new String[]{munt, munt, munt, munt, munt, munt, munt, munt, kop, kop, kop, kop, kop, kop, kop, kop, kant}, "Returns heads or tails"));
-
-
         String allCommands = "**ALL COMMANDS**\n----------------------------------------------------------------------------\n<Activation keyword = \"" + this.PREFIX +"\">\n\n";
         for (String activationString : this.messages.keySet()) {
             allCommands += activationString.toUpperCase() + "   =   " + this.messages.get(activationString).getDescription() + "\n";
         }
-        this.messages.put("allCommands", new Message(allCommands, "Shows all the commands"));
+        this.messages.put("allcommands", new Message(allCommands, "Shows all the commands"));
     }
 
     private synchronized void saveCustomPlaylists() {

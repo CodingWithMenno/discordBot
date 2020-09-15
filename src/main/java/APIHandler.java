@@ -53,6 +53,17 @@ public class APIHandler {
         }
     }
 
+    public String getRandomImage() {    // Maakt gebruik van API van stan
+        try {
+            JSONObject jObject = getAPI("http://h2892166.stratoserver.net/api/meme/?subs=funny");
+            String imageURL = String.valueOf(jObject.get("result"));
+            return imageURL;
+
+        } catch (Exception e) {
+            return "Random image not found";
+        }
+    }
+
     private JSONObject getAPI(String url) {
         try {
 
