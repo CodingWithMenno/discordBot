@@ -6,9 +6,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import javax.security.auth.login.LoginException;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Scanner;
+import java.util.*;
 
 public class MainHandler extends ListenerAdapter {
 
@@ -18,6 +16,8 @@ public class MainHandler extends ListenerAdapter {
      *  -Readme.md verbeteren
      *  -User can make custom commands
      *  -All commands command mooier maken
+     *  -Een game toevoegen (trivia bv)
+     *  -music playlist kunnen opslaan
      */
 
 
@@ -68,45 +68,45 @@ public class MainHandler extends ListenerAdapter {
             return;
         }
 
-        String message = event.getMessage().getContentDisplay().substring(this.PREFIX.length());
+        String[] message = event.getMessage().getContentDisplay().substring(this.PREFIX.length()).split(" ");
 
         handleMessage(event, message);
     }
 
-    private void handleMessage(MessageReceivedEvent event, String message) {
+    private void handleMessage(MessageReceivedEvent event, String[] message) {
 
-        if (message.contains("m ")) {   // Voor muziek commands
-            if (message.contains("play ")) {
-                this.musicHandler.loadAndPlay(event.getTextChannel(), message.substring(7));
-            } else if (message.contains("skip")) {
+        if (message[0].equals("m")) {   // Voor muziek commands
+            if (message[1].equals("play")) {
+                this.musicHandler.loadAndPlay(event.getTextChannel(), message[2]);
+            } else if (message[1].equals("skip")) {
                 this.musicHandler.skipTrack(event.getTextChannel());
-            } else if (message.contains("leave")) {
-                this.musicHandler.leaveChannel(event.getTextChannel().getGuild().getAudioManager());
+            } else if (message[1].equals("leave")) {
+                this.musicHandler.leaveChannel(event.getTextChannel());
             }
             return;
         }
 
-        if (message.contains("suggestion ")) {    // Voor nieuwe command ideeën
-            String filteredMessage = filterMessage(message.substring(11));
+        if (message[0].equals("suggestion")) {    // Voor nieuwe command ideeën
+            String filteredMessage = filterMessage(message[1]);
             saveToFile("src/main/resources/CommandSuggestions.txt", event.getAuthor().getName() + " : " + filteredMessage);
         }
 
-        if (message.contains("image ")) {        // Voor random images
-            String id = message.substring(6);
+        if (message[0].equals("image")) {        // Voor random images
+            String id = message[1];
             String memeURL = this.apiHandler.getRandomImage(id);
             event.getChannel().sendMessage(memeURL).queue();
             return;
         }
 
-        if (message.contains("temp ")) {       // Voor de temperatuur berichten
-            String stad = message.substring(5);
+        if (message[0].equals("temp")) {       // Voor de temperatuur berichten
+            String stad = message[1];
             String goodCity = stad.substring(0, 1).toUpperCase() + stad.substring(1);
             event.getChannel().sendMessage(this.apiHandler.getWeatherFrom(goodCity)).queue();
             return;
         }
 
         for (String key : this.messages.keySet()) {     // Voor alle niet-speciale berichten
-            if (message.contains(key)) {
+            if (message[0].equals(key)) {
                 event.getChannel().sendMessage(this.messages.get(key).getAnswerString()).queue();
                 return;
             }
@@ -138,18 +138,18 @@ public class MainHandler extends ListenerAdapter {
     }
 
     private void setMessages() {
-        this.messages = new HashMap<>();        // Alle mogelijke commands
+        this.messages = new LinkedHashMap<>();        // Alle mogelijke commands
 
 
         this.messages.put("ping", new Message(new String[]{"No :(", "Pong!", "Oke boomer"}, "Pong"));
 
-        this.messages.put("temp ", new Message("In <city> is het <celsius> graden", "Returns the temperature of the chosen city (only in the Netherlands) by typing a city after the command"));
+        this.messages.put("temp", new Message("In <city> is het <celsius> graden", "Returns the temperature of the chosen city (only in the Netherlands) by typing a city after the command"));
 
-        this.messages.put("image ", new Message("<ImageURL>", "Returns a chosen/random image by typing a number or \"random\" behind the command"));
+        this.messages.put("image", new Message("<ImageURL>", "Returns a chosen/random image by typing a number or \"random\" behind the command"));
 
-        this.messages.put("suggestion ", new Message("Thanks for the suggestion :)", "Type a new command suggestion after this command and maybe it will be implemented"));
+        this.messages.put("suggestion", new Message("Thanks for the suggestion :)", "Type a new command suggestion after this command and maybe it will be implemented"));
 
-        this.messages.put("m play ", new Message("*Plays song*", "Type a youtube url after this command to play this video"));
+        this.messages.put("m play", new Message("*Plays song*", "Type a youtube url after this command to play this video"));
 
         this.messages.put("m skip", new Message("*Skips a song*", "Skips the current playing video and plays the next one"));
 
@@ -158,7 +158,7 @@ public class MainHandler extends ListenerAdapter {
         String munt = "https://www.budgetgift.nl/604/0/0/1/ffffff00/441842e6/a19c84e94684a0c00a7658d0be40c75b26e02e700df22c7459be5c4cfcd6438b/1-euro-munt.png";
         String kop = "https://external-preview.redd.it/hA47uRmiVowkZy1_3435QpN0h82gh2cLdXdy-Bc5-7Y.gif?format=png8&s=9841751c47a1e8a24b92974a70a1ba7354db789a";
         String kant = "https://upload.wikimedia.org/wikipedia/commons/6/67/1_oz_Vienna_Philharmonic_2017_edge.png";
-        this.messages.put("coin flip", new Message(new String[]{munt, munt, munt, munt, munt, munt, munt, munt, kop, kop, kop, kop, kop, kop, kop, kop, kant}, "Returns heads or tails"));
+        this.messages.put("coinFlip", new Message(new String[]{munt, munt, munt, munt, munt, munt, munt, munt, kop, kop, kop, kop, kop, kop, kop, kop, kant}, "Returns heads or tails"));
 
 
         String allCommands = "**ALL COMMANDS**\n----------------------------------------------------------------------------\n<Activation keyword = \"" + this.PREFIX +"\">\n\n";

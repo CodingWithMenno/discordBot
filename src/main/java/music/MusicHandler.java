@@ -102,11 +102,13 @@ public class MusicHandler {
         }
     }
 
-    public void leaveChannel(AudioManager audioManager) {
+    public void leaveChannel(TextChannel textChannel) {
+        AudioManager audioManager = textChannel.getGuild().getAudioManager();
         if (!audioManager.isConnected()) {
             return;
         }
 
         audioManager.closeAudioConnection();
+        textChannel.sendMessage("* EpicGamerBot drops mic *").queue();
     }
 }
