@@ -15,7 +15,6 @@ public class MainHandler extends ListenerAdapter {
      *  -Easter eggs toevoegen
      *  -Readme.md verbeteren
      *  -User can make custom commands
-     *  -All commands command mooier maken
      *  -Een game toevoegen (trivia bv)
      */
 
@@ -299,11 +298,17 @@ public class MainHandler extends ListenerAdapter {
 
         this.messages.put("m playlist show", new Message("*Shows all songs in your custom playlist*", "Shows all songs in your custom playlist"));
 
-        String allCommands = "**ALL COMMANDS**\n----------------------------------------------------------------------------\n<Activation keyword = \"" + this.PREFIX +"\">\n\n";
+        String allCommands = "```**ALL COMMANDS**\n----------------------------------------------------------------------------\n<Activation keyword = \"" + this.PREFIX +"\">\n\n";
         for (String activationString : this.messages.keySet()) {
-            allCommands += activationString.toUpperCase() + "   =   " + this.messages.get(activationString).getDescription() + "\n";
+            allCommands += activationString.toUpperCase();
+            int totalSpaces = 25 - activationString.length();
+            for (int i = 0; i < totalSpaces; i++) {
+                allCommands += " ";
+            }
+            allCommands += "=   " + this.messages.get(activationString).getDescription() + "\n";
         }
-        this.messages.put("allcommands", new Message(allCommands, "Shows all the commands"));
+        allCommands += "```";
+        this.messages.put("commands", new Message(allCommands, "Shows all the commands"));
     }
 
     private synchronized void saveCustomPlaylists() {
