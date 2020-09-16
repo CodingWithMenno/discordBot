@@ -30,4 +30,8 @@ public class GuildMusicManager {
     public AudioPlayerSendHandler getSendHandler() {
         return new AudioPlayerSendHandler(player);
     }
+
+    public void emptyQeue() {
+        this.scheduler.emptyQeue();
+    }
 }

@@ -7,6 +7,7 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.VoiceChannel;
@@ -48,7 +49,7 @@ public class MusicHandler {
         playerManager.loadItemOrdered(musicManager, trackUrl, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                channel.sendMessage("Adding to queue: " + track.getInfo().title).queue();
+                sendMessage(channel, "", "Added to queue: " + track.getInfo().title);
 
                 play(channel.getGuild(), musicManager, track);
             }
@@ -61,19 +62,19 @@ public class MusicHandler {
                     firstTrack = playlist.getTracks().get(0);
                 }
 
-                channel.sendMessage("Adding to queue: " + firstTrack.getInfo().title + " (first track of playlist: " + playlist.getName() + ")").queue();
+                sendMessage(channel, "", "Added to queue: " + firstTrack.getInfo().title + " (first track of playlist: " + playlist.getName() + ")");
 
                 play(channel.getGuild(), musicManager, firstTrack);
             }
 
             @Override
             public void noMatches() {
-                channel.sendMessage("Nothing found by: " + trackUrl).queue();
+                sendMessage(channel, "Error", "Nothing found by: " + trackUrl);
             }
 
             @Override
             public void loadFailed(FriendlyException exception) {
-                channel.sendMessage("Could not play: " + exception.getMessage()).queue();
+                sendMessage(channel, "Error", "Could not play: " + exception.getMessage());
             }
         });
     }
@@ -85,13 +86,16 @@ public class MusicHandler {
     }
 
     public void skipTrack(TextChannel channel) {
-        GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
-        musicManager.scheduler.nextTrack();
-
-        channel.sendMessage("Skipped to next track").queue();
+        skip(channel);
+        sendMessage(channel, "", "Skipped to the next track");
     }
 
-    private static void connectToVoiceChannel(AudioManager audioManager) {
+    public void skip(TextChannel channel) {
+        GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
+        musicManager.scheduler.nextTrack();
+    }
+
+    private void connectToVoiceChannel(AudioManager audioManager) {
         if (!audioManager.isConnected()) {
             for (VoiceChannel voiceChannel : audioManager.getGuild().getVoiceChannels()) {
                 if (!voiceChannel.getMembers().isEmpty()) {
@@ -109,6 +113,24 @@ public class MusicHandler {
         }
 
         audioManager.closeAudioConnection();
-        textChannel.sendMessage("* EpicGamerBot drops mic *").queue();
+        sendMessage(textChannel, "", "* EpicGamerBot drops mic *");
+    }
+
+    public void emptyQeue(TextChannel textChannel) {
+        getGuildAudioPlayer(textChannel.getGuild()).emptyQeue();
+    }
+
+    private void sendMessage(TextChannel textChannel, String title, String message) {
+        EmbedBuilder embed = new EmbedBuilder();
+
+        if (title.isEmpty()) {
+            embed.setDescription(message);
+            textChannel.sendMessage(embed.build()).queue();
+            return;
+        }
+
+        embed.setTitle(title);
+        embed.setDescription(message);
+        textChannel.sendMessage(embed.build()).queue();
     }
 }

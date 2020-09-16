@@ -1,6 +1,8 @@
 import music.MusicHandler;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -13,9 +15,14 @@ public class MainHandler extends ListenerAdapter {
 
     /** TO DO:
      *  -Easter eggs toevoegen
-     *  -Readme.md verbeteren
      *  -User can make custom commands
      *  -Een game toevoegen (trivia bv)
+     *  -Custom status toevoegen voor de bot
+     *  -Een line van rik invoegen
+     *  -Volume control
+     *  -admin commands maken (te doen met Guild class)
+     *
+     *  -Readme.md verbeteren
      */
 
 
@@ -51,6 +58,20 @@ public class MainHandler extends ListenerAdapter {
         this.musicHandler = new MusicHandler();
     }
 
+    public static void sendMessage(TextChannel textChannel, String title, String message) {
+        EmbedBuilder embed = new EmbedBuilder();
+
+        if (title.isEmpty()) {
+            embed.setDescription(message);
+            textChannel.sendMessage(embed.build()).queue();
+            return;
+        }
+
+        embed.setTitle(title);
+        embed.setDescription(message);
+        textChannel.sendMessage(embed.build()).queue();
+    }
+
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {     // Word aangeroepen als een bericht binnenkomt
 
@@ -75,36 +96,74 @@ public class MainHandler extends ListenerAdapter {
         handleMessage(event, message);
     }
 
+    private void sayJeff(MessageReceivedEvent event) {
+        this.musicHandler.emptyQeue(event.getTextChannel());
+        this.musicHandler.skip(event.getTextChannel());
+        this.musicHandler.loadAndPlay(event.getTextChannel(), "https://www.youtube.com/watch?v=_nce9A5S5uM");
+        try {
+            Thread.sleep(2500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        this.musicHandler.leaveChannel(event.getTextChannel());
+    }
+
     private void handleMessage(MessageReceivedEvent event, String[] message) {
         boolean handled = handleMusicCommands(event, message);    // Voor alle muziek commands
         if (handled) {
             return;
         }
 
+        if (message[0].equals("commands")) {
+            String command = "commands";
+            event.getTextChannel().sendMessage(this.messages.get(command).getAnswerString()).queue();
+            return;
+        }
+
+        if (message[0].equals("jeff")) {
+            sayJeff(event);
+            return;
+        }
+
         if (message[0].equals("suggestion")) {    // Voor nieuwe command ideeën
-            String filteredMessage = filterMessage(message[1]);
+            String suggestion = "";
+            for (int i = 1; i < message.length; i++) {
+                suggestion += message[i] + " ";
+            }
+
+            String filteredMessage = filterMessage(suggestion);
             saveTextToFile("src/main/resources/CommandSuggestions.txt", event.getAuthor().getName() + " : " + filteredMessage);
+            sendMessage(event.getTextChannel(), "", "Thanks for the suggestion :)");
+            return;
         }
 
         if (message[0].equals("image")) {        // Voor random images
-            String memeURL = this.apiHandler.getRandomImage();
-            event.getChannel().sendMessage(memeURL).queue();
+            String[] meme = this.apiHandler.getRandomImage();
+            if (meme == null) {
+                sendMessage(event.getTextChannel(), "Error", "Random image not found");
+                return;
+            }
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.setTitle(meme[0], meme[1]);
+            embed.setImage(meme[2]);
+            event.getChannel().sendMessage(embed.build()).queue();
             return;
         }
 
         if (message[0].equals("temp")) {       // Voor de temperatuur berichten
             String stad = message[1];
             String goodCity = stad.substring(0, 1).toUpperCase() + stad.substring(1);
-            event.getChannel().sendMessage(this.apiHandler.getWeatherFrom(goodCity)).queue();
+            sendMessage(event.getTextChannel(), goodCity, this.apiHandler.getWeatherFrom(goodCity));
             return;
         }
 
         for (String key : this.messages.keySet()) {     // Voor alle niet-speciale berichten
             if (message[0].equals(key)) {
-                event.getChannel().sendMessage(this.messages.get(key).getAnswerString()).queue();
+                sendMessage(event.getTextChannel(), "", this.messages.get(key).getAnswerString());
                 return;
             }
         }
+        sendMessage(event.getTextChannel(), "Error", "I did not recognise this command, type **\"gamer commands\"** to see all my commands");
     }
 
     private boolean handleMusicCommands(MessageReceivedEvent event, String[] message) {
@@ -114,10 +173,12 @@ public class MainHandler extends ListenerAdapter {
             } else if (message[1].equals("skip")) {
                 this.musicHandler.skipTrack(event.getTextChannel());
             } else if (message[1].equals("leave")) {
+                this.musicHandler.emptyQeue(event.getTextChannel());
+                this.musicHandler.skip(event.getTextChannel());
                 this.musicHandler.leaveChannel(event.getTextChannel());
             }
 
-            else if (message[1].equals("playlist")) {   // Voor de custom playlists
+            else if (message[1].equals("p")) {   // Voor de custom playlists
                 String username = event.getAuthor().getName();
 
                 if (message[2].equals("create")) {
@@ -134,7 +195,7 @@ public class MainHandler extends ListenerAdapter {
 
                     this.customPlaylists.add(new MusicPlaylist(username, videoURLs));
                     saveCustomPlaylists();
-                    event.getChannel().sendMessage("A custom playlist had been created for: " + username).queue();
+                    sendMessage(event.getTextChannel(), "", "A custom playlist has been created for: " + username);
                 }
 
                 else if (message[2].equals("play")) {
@@ -142,7 +203,7 @@ public class MainHandler extends ListenerAdapter {
                     MusicPlaylist userPlaylist = isInPlaylists(username);
 
                     if (userPlaylist == null) {
-                        event.getChannel().sendMessage("You have no custom playlist yet, make one with the command: " + this.PREFIX + "m playlist create <song URL1> <song URL2> ...").queue();
+                        sendNoPlaylist(event);
                         return true;
                     }
 
@@ -151,21 +212,36 @@ public class MainHandler extends ListenerAdapter {
                     }
                 }
 
+                else if (message[2].equals("shuffle")) {
+                    MusicPlaylist userPlaylist = isInPlaylists(username);
+
+                    if (userPlaylist == null) {
+                        sendNoPlaylist(event);
+                        return true;
+                    }
+
+                    ArrayList<String> shuffledList = userPlaylist.getVideoURLs();
+                    Collections.shuffle(shuffledList);
+                    for (String url : shuffledList) {
+                        this.musicHandler.loadAndPlay(event.getTextChannel(), url);
+                    }
+                }
+
                 else if (message[2].equals("add")) {
                     MusicPlaylist userPlaylist = isInPlaylists(username);
 
                     if (userPlaylist == null) {
-                        event.getChannel().sendMessage("You have no custom playlist yet, make one with the command: " + this.PREFIX + "m playlist create <song URL1> <song URL2> ...").queue();
+                        sendNoPlaylist(event);
                         return true;
                     }
 
                     boolean added = userPlaylist.addURL(message[3]);
 
                     if (added) {
-                        event.getChannel().sendMessage("Added a new song to your playlist").queue();
+                        sendMessage(event.getTextChannel(), "", "Added a new song to your playlist");
                         saveCustomPlaylists();
                     } else {
-                        event.getChannel().sendMessage("You already have this song in your playlist").queue();
+                        sendMessage(event.getTextChannel(), "Error", "You already have this song in your playlist");
                     }
                 }
 
@@ -173,17 +249,17 @@ public class MainHandler extends ListenerAdapter {
                     MusicPlaylist userPlaylist = isInPlaylists(username);
 
                     if (userPlaylist == null) {
-                        event.getChannel().sendMessage("You have no custom playlist yet, make one with the command: " + this.PREFIX + "m playlist create <song URL1> <song URL2> ...").queue();
+                        sendNoPlaylist(event);
                         return true;
                     }
 
                     boolean removed = userPlaylist.removeURL(message[3]);
 
                     if (removed) {
-                        event.getChannel().sendMessage("Removed the song from your playlist").queue();
+                        sendMessage(event.getTextChannel(), "", "The song has been removed from your playlist");
                         saveCustomPlaylists();
                     } else {
-                        event.getChannel().sendMessage("You did not have this song in your playlist").queue();
+                        sendMessage(event.getTextChannel(), "Error", "You already did not have this song in your playlist");
                     }
                 }
 
@@ -191,11 +267,11 @@ public class MainHandler extends ListenerAdapter {
                     MusicPlaylist playlist = isInPlaylists(username);
 
                     if (playlist == null) {
-                        event.getChannel().sendMessage("You did not have a playlist you dumb dumb").queue();
+                        sendMessage(event.getTextChannel(), "Error", "You did not have a playlist you dumb dumb");
                         return true;
                     } else {
                         this.customPlaylists.remove(playlist);
-                        event.getChannel().sendMessage("Successfully removed your custom playlist").queue();
+                        sendMessage(event.getTextChannel(), "", "Successfully removed your custom playlist");
                     }
                 }
 
@@ -203,21 +279,29 @@ public class MainHandler extends ListenerAdapter {
                     MusicPlaylist userPlaylist = isInPlaylists(username);
 
                     if (userPlaylist == null) {
-                        event.getChannel().sendMessage("You have no custom playlist yet, make one with the command: " + this.PREFIX + "m playlist create <song URL1> <song URL2> ...").queue();
+                        sendNoPlaylist(event);
                         return true;
                     }
 
-                    event.getChannel().sendMessage("*Video's in your playlist:*").queue();
+                    sendMessage(event.getTextChannel(), "", "Video's in your playlist:");
                     for (String playlist : userPlaylist.getVideoURLs()) {
                         event.getChannel().sendMessage(playlist).queue();
                     }
+                } else {
+                    sendMessage(event.getTextChannel(), "Error", "I did not recognise this command, type **\"gamer commands\"** to see all my commands");
                 }
 
+            } else {
+                sendMessage(event.getTextChannel(), "Error", "I did not recognise this command, type **\"gamer commands\"** to see all my commands");
             }
 
             return true;
         }
         return false;
+    }
+
+    private void sendNoPlaylist(MessageReceivedEvent event) {
+        sendMessage(event.getTextChannel(), "Error", "You have no custom playlist yet, make one with the command: **" + this.PREFIX + "m playlist create <song URL1> <song URL2> ...**");
     }
 
     private MusicPlaylist isInPlaylists(String username) {
@@ -274,34 +358,38 @@ public class MainHandler extends ListenerAdapter {
 
         this.messages.put("ping", new Message(new String[]{"No :(", "Pong!", "Oke boomer"}, "Pong"));
 
-        this.messages.put("temp", new Message("In <city> is het <celsius> graden", "Returns the temperature of the chosen city (only in the Netherlands) by typing a city after the command"));
+        this.messages.put("temp <city>", new Message("In <city> is het <celsius> graden", "Shows the temperature of the city (only in the Netherlands) by typing a city after the command"));
 
         this.messages.put("image", new Message("<ImageURL>", "Returns a random image from the subreddet r/funny"));
 
-        this.messages.put("suggestion", new Message("Thanks for the suggestion :)", "Type a new command suggestion after this command and maybe it will be implemented"));
+        this.messages.put("suggestion <suggestion>", new Message("Thanks for the suggestion :)", "Type a new command suggestion after this command and maybe it will be implemented"));
 
-        this.messages.put("m play", new Message("*Plays song*", "Type a youtube url after this command to play this video"));
+        this.messages.put("jeff", new Message("My name is Jeff", "My name is Jeff (Only works when in voice channel)"));
+
+        this.messages.put("m play <URL>", new Message("*Plays song*", "Type a youtube url after this command to play this video"));
 
         this.messages.put("m skip", new Message("*Skips a song*", "Skips the current playing video and plays the next one"));
 
         this.messages.put("m leave", new Message("*Leaves channel", "The bot will leave the channel its in"));
 
-        this.messages.put("m playlist create", new Message("Custom playlist created", "Creates a custom playlist saves it with the users name"));
+        this.messages.put("m p create <URL1> ...", new Message("Custom playlist created", "Creates a custom playlist saves it with the users name"));
 
-        this.messages.put("m playlist delete", new Message("Deleted your custom playlist", "Deletes your custom playlist"));
+        this.messages.put("m p delete", new Message("Deleted your custom playlist", "Deletes your custom playlist"));
 
-        this.messages.put("m playlist play", new Message("Playing your custom playlist", "This command will play your custom saved playlist"));
+        this.messages.put("m p play", new Message("Playing your custom playlist", "This command will play your custom saved playlist"));
 
-        this.messages.put("m playlist add", new Message("New song added to your custom playlist", "Adds the url behind the command to your playlist"));
+        this.messages.put("m p shuffle", new Message("Plays your custom playlist in a random order", "This command will play your custom playlist in a random order"));
 
-        this.messages.put("m playlist remove", new Message("Removed a url from your custom playlist", "Removes a url from your custom playlist"));
+        this.messages.put("m p add <URL>", new Message("New song added to your custom playlist", "Adds the url behind the command to your playlist"));
 
-        this.messages.put("m playlist show", new Message("*Shows all songs in your custom playlist*", "Shows all songs in your custom playlist"));
+        this.messages.put("m p remove <URL>", new Message("Removed a url from your custom playlist", "Removes a url from your custom playlist"));
+
+        this.messages.put("m p show", new Message("*Shows all songs in your custom playlist*", "Shows all songs in your custom playlist"));
 
         String allCommands = "```**ALL COMMANDS**\n----------------------------------------------------------------------------\n<Activation keyword = \"" + this.PREFIX +"\">\n\n";
         for (String activationString : this.messages.keySet()) {
             allCommands += activationString.toUpperCase();
-            int totalSpaces = 25 - activationString.length();
+            int totalSpaces = 32 - activationString.length();
             for (int i = 0; i < totalSpaces; i++) {
                 allCommands += " ";
             }
@@ -318,6 +406,8 @@ public class MainHandler extends ListenerAdapter {
             outputStream = new ObjectOutputStream(new FileOutputStream(new File("src/main/resources/CustomPlaylists")));
 
             outputStream.writeObject(this.customPlaylists);
+
+            System.out.println("Saved the custom playlists");
 
         } catch (IOException e) {
             e.printStackTrace();

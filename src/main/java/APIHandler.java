@@ -32,35 +32,39 @@ public class APIHandler {
         }
     }
 
-    public String getRandomImage(String id) {
-        try {
+//    public String getRandomImage(String id) {
+//        try {
+//
+//            int number;
+//
+//            if (id.equals("random")) {
+//                number = random.nextInt(259);
+//            } else {
+//                number = Integer.parseInt(id);
+//            }
+//
+//            JSONObject jObject = getAPI("http://alpha-meme-maker.herokuapp.com/memes/" + number + "/");
+//            JSONObject dataJson = jObject.getJSONObject("data");
+//            String imageURL = String.valueOf(dataJson.get("image"));
+//            return imageURL;
+//
+//        } catch (Exception e) {
+//            return "Random image not found";
+//        }
+//    }
 
-            int number;
-
-            if (id.equals("random")) {
-                number = random.nextInt(259);
-            } else {
-                number = Integer.parseInt(id);
-            }
-
-            JSONObject jObject = getAPI("http://alpha-meme-maker.herokuapp.com/memes/" + number + "/");
-            JSONObject dataJson = jObject.getJSONObject("data");
-            String imageURL = String.valueOf(dataJson.get("image"));
-            return imageURL;
-
-        } catch (Exception e) {
-            return "Random image not found";
-        }
-    }
-
-    public String getRandomImage() {    // Maakt gebruik van API van stan
+    public String[] getRandomImage() {    // Maakt gebruik van API van stan
         try {
             JSONObject jObject = getAPI("http://h2892166.stratoserver.net/api/meme/?subs=funny");
-            String imageURL = String.valueOf(jObject.get("result"));
-            return imageURL;
+            JSONObject article = jObject.getJSONObject("article");
+            String imageTitle = String.valueOf(article.get("title"));
+            String imageURL = String.valueOf(article.get("image"));
+            String link = String.valueOf(article.get("link"));
+            String[] list = {imageTitle, link, imageURL};
+            return list;
 
         } catch (Exception e) {
-            return "Random image not found";
+            return null;
         }
     }
 
