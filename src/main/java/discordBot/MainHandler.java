@@ -1,5 +1,7 @@
 package discordBot;
 
+import discordBot.commands.Ping;
+import discordBot.commands.Spam;
 import discordBot.music.MusicHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -37,7 +39,7 @@ public class MainHandler extends ListenerAdapter {
     private static final String DISCORDTOKEN = "";
     private static JDA jda;
 
-    private final String PREFIX = "gamer ";     // Start command voor de bot
+    public static final String PREFIX = "gamer ";     // Start command voor de bot
     private HashMap<String, Message> messages;
 
     private APIHandler apiHandler;
