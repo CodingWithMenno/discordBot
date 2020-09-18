@@ -12,7 +12,7 @@ public class Jeff extends Message {
     public void doCommand(MessageReceivedEvent event, MusicHandler musicHandler) {
         musicHandler.emptyQeue(event.getTextChannel());
         musicHandler.skip(event.getTextChannel());
-        musicHandler.loadAndPlay(event.getTextChannel(), "https://www.youtube.com/watch?v=_nce9A5S5uM");
+        musicHandler.loadAndPlay(event.getTextChannel(), "https://www.youtube.com/watch?v=_nce9A5S5uM", event.getMember().getUser().getName());
         try {
             Thread.sleep(2800);
         } catch (InterruptedException e) {

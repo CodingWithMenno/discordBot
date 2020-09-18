@@ -1,7 +1,7 @@
 package discordBot;
 
-import discordBot.commands.Ping;
-import discordBot.commands.Spam;
+import discordBot.commands.*;
+import discordBot.commands.Image;
 import discordBot.music.MusicHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -35,7 +35,7 @@ public class MainHandler extends ListenerAdapter {
      */
 
 
-    //Discord stuff
+    // Discord stuff
     private static final String DISCORDTOKEN = "";
     private static JDA jda;
 
@@ -46,7 +46,16 @@ public class MainHandler extends ListenerAdapter {
     private ArrayList<String> blackListedWords;
     private MusicHandler musicHandler;
 
-    private ArrayList<MusicPlaylist> customPlaylists;
+
+    // De connecties naar elk command
+    private Ping pingCommand;
+    private Coinflip coinflipCommand;
+    private Image imageCommand;
+    private Jeff jeffCommand;
+    private Music musicCommands;
+    private Spam spamCommand;
+    private Suggestion suggestionCommand;
+    private Temperature temperatureCommand;
 
 
     public static void main(String[] args) {
@@ -67,7 +76,6 @@ public class MainHandler extends ListenerAdapter {
     public MainHandler() {
         setMessages();
         setBlacklistWords();
-        initCustomPlaylists();
         this.apiHandler = new APIHandler();
         this.musicHandler = new MusicHandler();
     }
@@ -121,290 +129,47 @@ public class MainHandler extends ListenerAdapter {
     }
 
     private void handleMessage(MessageReceivedEvent event, String[] message) {
-        boolean handled = handleMusicCommands(event, message);    // Voor alle muziek commands
-        if (handled) {
-            return;
+
+        String commando = message[0].toLowerCase();
+
+        switch (commando) {
+            case "commands":    String command = "commands";
+                                event.getTextChannel().sendMessage(this.messages.get(command).getAnswerString()).queue();
+                                return;
+            case "ping":        this.pingCommand.doCommand(event.getTextChannel()); return;
+            case "coinflip":    this.coinflipCommand.doCommand(event.getTextChannel()); return;
+            case "image":       this.imageCommand.doCommand(event.getTextChannel(), this.apiHandler); return;
+            case "jeff":        this.jeffCommand.doCommand(event, this.musicHandler); return;
+            case "m":           this.musicCommands.doCommand(event, message, this.musicHandler); return;
+            case "spam":        this.spamCommand.doCommand(event, message); return;
+            case "suggestion":  this.suggestionCommand.doCommand(event, message, this.blackListedWords); return;
+            case "temp":        this.temperatureCommand.doCommand(event.getTextChannel(), message, this.apiHandler); return;
         }
 
-        if (message[0].equals("commands")) {    // Voor het All comannds command
-            String command = "commands";
-            event.getTextChannel().sendMessage(this.messages.get(command).getAnswerString()).queue();
-            return;
-        }
-
-        if (message[0].equals("spam")) {    // Voor het spammen van users
-
-            boolean hasPermission = false;
-            List<Role> roles = event.getMember().getRoles();
-            for (Role role : roles) {
-                if (role.getName().equals("Spammer")) {
-                    hasPermission = true;
-                }
-            }
-
-            if (!hasPermission) {
-                sendMessage(event.getTextChannel(), "Error", "Sorry, you can only use this command when having the role \"Spammer\"");
-                return;
-            }
-
-            String unluckyPerson = message[1];
-            List<Member> members = event.getGuild().getMembersByName(unluckyPerson, true);
-
-            for (Member member : members) {
-                for (int i = 0; i < 10; i++) {
-                    event.getTextChannel().sendMessage("<@" + member.getUser().getId() + ">").queue();
-                }
-                return;
-            }
-
-            sendMessage(event.getTextChannel(), "Error", "Person not found");
-
-            return;
-        }
-
-        if (message[0].equals("jeff")) {    // Voor jeff command
-            this.musicHandler.emptyQeue(event.getTextChannel());
-            this.musicHandler.skip(event.getTextChannel());
-            this.musicHandler.loadAndPlay(event.getTextChannel(), "https://www.youtube.com/watch?v=_nce9A5S5uM");
-            try {
-                Thread.sleep(2800);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            this.musicHandler.leaveChannel(event.getTextChannel());
-            return;
-        }
-
-        if (message[0].equals("suggestion")) {    // Voor nieuwe command ideeën
-            String suggestion = "";
-            for (int i = 1; i < message.length; i++) {
-                suggestion += message[i] + " ";
-            }
-
-            String filteredMessage = filterMessage(suggestion);
-            saveTextToFile("src/main/resources/CommandSuggestions.txt", event.getAuthor().getName() + " : " + filteredMessage);
-            sendMessage(event.getTextChannel(), "", "Thanks for the suggestion :)");
-            return;
-        }
-
-        if (message[0].equals("image")) {        // Voor random images
-            String[] meme = this.apiHandler.getRandomImage();
-            if (meme == null) {
-                sendMessage(event.getTextChannel(), "Error", "Random image not found");
-                return;
-            }
-            EmbedBuilder embed = new EmbedBuilder();
-            embed.setColor(new Color(50,205,50));
-            embed.setTitle(meme[0], meme[1]);
-            embed.setImage(meme[2]);
-            event.getChannel().sendMessage(embed.build()).queue();
-            return;
-        }
-
-        if (message[0].equals("temp")) {       // Voor de temperatuur berichten
-            String stad = message[1];
-            String goodCity = stad.substring(0, 1).toUpperCase() + stad.substring(1);
-            sendMessage(event.getTextChannel(), goodCity, this.apiHandler.getWeatherFrom(goodCity));
-            return;
-        }
-
-        for (String key : this.messages.keySet()) {     // Voor alle niet-speciale berichten
-            if (message[0].equals(key)) {
-                sendMessage(event.getTextChannel(), "", this.messages.get(key).getAnswerString());
-                return;
-            }
-        }
-        sendMessage(event.getTextChannel(), "Error", "I did not recognise this command, type **\"gamer commands\"** to see all my commands");
-    }
-
-    private boolean handleMusicCommands(MessageReceivedEvent event, String[] message) {
-        if (message[0].equals("m")) {   // Voor muziek commands
-            if (message[1].equals("play")) {
-                this.musicHandler.loadAndPlay(event.getTextChannel(), message[2]);
-            } else if (message[1].equals("skip")) {
-                this.musicHandler.skipTrack(event.getTextChannel());
-            } else if (message[1].equals("leave")) {
-                this.musicHandler.emptyQeue(event.getTextChannel());
-                this.musicHandler.skip(event.getTextChannel());
-                this.musicHandler.leaveChannel(event.getTextChannel());
-            }
-
-            else if (message[1].equals("p")) {   // Voor de custom playlists
-                String username = event.getAuthor().getName();
-
-                if (message[2].equals("create")) {
-                    MusicPlaylist oldPlaylist = isInPlaylists(username);
-
-                    if (oldPlaylist != null) {
-                        this.customPlaylists.remove(oldPlaylist);
-                    }
-
-                    ArrayList<String> videoURLs = new ArrayList<>();
-                    for (int i = 3; i < message.length; i++) {
-                        videoURLs.add(message[i]);
-                    }
-
-                    this.customPlaylists.add(new MusicPlaylist(username, videoURLs));
-                    saveCustomPlaylists();
-                    sendMessage(event.getTextChannel(), "", "A custom playlist has been created for: " + username);
-                }
-
-                else if (message[2].equals("play")) {
-
-                    MusicPlaylist userPlaylist = isInPlaylists(username);
-
-                    if (userPlaylist == null) {
-                        sendNoPlaylist(event);
-                        return true;
-                    }
-
-                    for (String url : userPlaylist.getVideoURLs()) {
-                        this.musicHandler.loadAndPlay(event.getTextChannel(), url);
-                    }
-                }
-
-                else if (message[2].equals("shuffle")) {
-                    MusicPlaylist userPlaylist = isInPlaylists(username);
-
-                    if (userPlaylist == null) {
-                        sendNoPlaylist(event);
-                        return true;
-                    }
-
-                    ArrayList<String> shuffledList = userPlaylist.getVideoURLs();
-                    Collections.shuffle(shuffledList);
-                    for (String url : shuffledList) {
-                        this.musicHandler.loadAndPlay(event.getTextChannel(), url);
-                    }
-                }
-
-                else if (message[2].equals("add")) {
-                    MusicPlaylist userPlaylist = isInPlaylists(username);
-
-                    if (userPlaylist == null) {
-                        sendNoPlaylist(event);
-                        return true;
-                    }
-
-                    boolean added = userPlaylist.addURL(message[3]);
-
-                    if (added) {
-                        sendMessage(event.getTextChannel(), "", "Added a new song to your playlist");
-                        saveCustomPlaylists();
-                    } else {
-                        sendMessage(event.getTextChannel(), "Error", "You already have this song in your playlist");
-                    }
-                }
-
-                else if (message[2].equals("remove")) {
-                    MusicPlaylist userPlaylist = isInPlaylists(username);
-
-                    if (userPlaylist == null) {
-                        sendNoPlaylist(event);
-                        return true;
-                    }
-
-                    boolean removed = userPlaylist.removeURL(message[3]);
-
-                    if (removed) {
-                        sendMessage(event.getTextChannel(), "", "The song has been removed from your playlist");
-                        saveCustomPlaylists();
-                    } else {
-                        sendMessage(event.getTextChannel(), "Error", "You already did not have this song in your playlist");
-                    }
-                }
-
-                else if (message[2].equals("delete")) {
-                    MusicPlaylist playlist = isInPlaylists(username);
-
-                    if (playlist == null) {
-                        sendMessage(event.getTextChannel(), "Error", "You did not have a playlist you dumb dumb");
-                        return true;
-                    } else {
-                        this.customPlaylists.remove(playlist);
-                        sendMessage(event.getTextChannel(), "", "Successfully removed your custom playlist");
-                    }
-                }
-
-                else if (message[2].equals("show")) {
-                    MusicPlaylist userPlaylist = isInPlaylists(username);
-
-                    if (userPlaylist == null) {
-                        sendNoPlaylist(event);
-                        return true;
-                    }
-
-                    sendMessage(event.getTextChannel(), "", "Video's in your playlist:");
-                    for (String playlist : userPlaylist.getVideoURLs()) {
-                        event.getChannel().sendMessage(playlist).queue();
-                    }
-                } else {
-                    sendMessage(event.getTextChannel(), "Error", "I did not recognise this command, type **\"gamer commands\"** to see all my commands");
-                }
-
-            } else {
-                sendMessage(event.getTextChannel(), "Error", "I did not recognise this command, type **\"gamer commands\"** to see all my commands");
-            }
-
-            return true;
-        }
-        return false;
-    }
-
-    private void sendNoPlaylist(MessageReceivedEvent event) {
-        sendMessage(event.getTextChannel(), "Error", "You have no custom playlist yet, make one with the command: **" + this.PREFIX + "m playlist create <song URL1> <song URL2> ...**");
-    }
-
-    private MusicPlaylist isInPlaylists(String username) {
-        MusicPlaylist customPlaylist = null;
-
-        if (this.customPlaylists.isEmpty()) {
-            return null;
-        }
-
-        for (MusicPlaylist playlist : this.customPlaylists) {
-            if (playlist.getUserName().equals(username)) {
-                customPlaylist = playlist;
-            }
-        }
-        return customPlaylist;
-    }
-
-    private String filterMessage(String message) {
-        for (String blackListWord : this.blackListedWords) {
-            if (message.contains(blackListWord)) {
-                return "BLOCKED MESSAGE";
-            }
-        }
-        return message;
-    }
-
-    private void saveTextToFile(String fileName, String text) {
-
-        PrintWriter printWriter = null;
-        try {
-
-            printWriter = new PrintWriter(new FileWriter(fileName, true));
-
-            printWriter.append(text + "\n");
-
-            System.out.println("Wrote something to: " + fileName);
-
-        } catch (IOException e) {
-            System.out.println("Something went wrong while writing to the file: " + fileName);
-        } finally {
-            if (printWriter != null) {
-                printWriter.close();
-            }
-        }
+        sendMessage(event.getTextChannel(), "Error", "I did not recognise this command, type **\"" + PREFIX + " commands\"** to see all my commands");
     }
 
     private void setMessages() {
-        this.messages = new LinkedHashMap<>();        // Alle mogelijke commands
-
         String munt = "https://www.budgetgift.nl/604/0/0/1/ffffff00/441842e6/a19c84e94684a0c00a7658d0be40c75b26e02e700df22c7459be5c4cfcd6438b/1-euro-munt.png";
         String kop = "https://external-preview.redd.it/hA47uRmiVowkZy1_3435QpN0h82gh2cLdXdy-Bc5-7Y.gif?format=png8&s=9841751c47a1e8a24b92974a70a1ba7354db789a";
         String kant = "https://upload.wikimedia.org/wikipedia/commons/6/67/1_oz_Vienna_Philharmonic_2017_edge.png";
+
+
+        // Connectie naar alle commands
+        this.pingCommand = new Ping(new String[]{"No :(", "Pong!", "Oke boomer"}, "Pong");
+        this.coinflipCommand = new Coinflip(new String[]{munt, munt, munt, munt, munt, munt, munt, munt, kop, kop, kop, kop, kop, kop, kop, kop, kant}, "Returns heads or tails");
+        this.imageCommand = new Image("<ImageURL>", "Returns a random image from the subreddet r/funny");
+        this.jeffCommand = new Jeff("My name is Jeff", "My name is Jeff (Only works when in voice channel)");
+        this.musicCommands = new Music("Returns a music answer", "All the commands for the the music");
+        this.spamCommand = new Spam("@<name> @<name> @<name> ...", "This command will spam a person so he/she will not ignore you anymore :) (Only for \"Spammers\")");
+        this.suggestionCommand = new Suggestion("Thanks for the suggestion :)", "Type a new command suggestion after this command and maybe it will be implemented");
+        this.temperatureCommand = new Temperature("In <city> is het <celsius> graden", "Shows the temperature of the city (only in the Netherlands) by typing a city after the command");
+
+
+        // Voor all commands command
+        this.messages = new LinkedHashMap<>();
+
+
         this.messages.put("coinflip", new Message(new String[]{munt, munt, munt, munt, munt, munt, munt, munt, kop, kop, kop, kop, kop, kop, kop, kop, kant}, "Returns heads or tails"));
 
         this.messages.put("ping", new Message(new String[]{"No :(", "Pong!", "Oke boomer"}, "Pong"));
@@ -450,55 +215,6 @@ public class MainHandler extends ListenerAdapter {
         }
         allCommands += "```";
         this.messages.put("commands", new Message(allCommands, "Shows all the commands"));
-    }
-
-    private synchronized void saveCustomPlaylists() {
-        ObjectOutputStream outputStream = null;
-
-        try {
-            outputStream = new ObjectOutputStream(new FileOutputStream(new File("src/main/resources/CustomPlaylists.txt")));
-
-            outputStream.writeObject(this.customPlaylists);
-
-            System.out.println("Saved the custom playlists");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (outputStream != null) {
-                    outputStream.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void initCustomPlaylists() {
-        ObjectInputStream inputStream = null;
-
-        try {
-            inputStream = new ObjectInputStream(new FileInputStream(new File("src/main/resources/CustomPlaylists.txt")));
-
-            this.customPlaylists = (ArrayList<MusicPlaylist>) inputStream.readObject();
-
-            if (this.customPlaylists == null) {
-                this.customPlaylists = new ArrayList<>();
-            }
-
-        } catch (Exception e) {
-            System.out.println("Something went wrong while reading the custom playlists");
-            e.printStackTrace();
-        } finally {
-            try {
-                if (inputStream != null) {
-                    inputStream.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     private void setBlacklistWords() {

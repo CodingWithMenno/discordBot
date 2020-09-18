@@ -9,6 +9,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.managers.AudioManager;
@@ -44,7 +45,7 @@ public class MusicHandler {
         return musicManager;
     }
 
-    public void loadAndPlay(final TextChannel channel, final String trackUrl) {
+    public void loadAndPlay(final TextChannel channel, final String trackUrl, String activationUser) {
         GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
 
         playerManager.loadItemOrdered(musicManager, trackUrl, new AudioLoadResultHandler() {
@@ -52,7 +53,7 @@ public class MusicHandler {
             public void trackLoaded(AudioTrack track) {
                 sendMessage(channel, "", "Added to queue: " + track.getInfo().title);
 
-                play(channel.getGuild(), musicManager, track);
+                play(channel.getGuild(), musicManager, track, activationUser);
             }
 
             @Override
@@ -65,7 +66,7 @@ public class MusicHandler {
 
                 sendMessage(channel, "", "Added to queue: " + firstTrack.getInfo().title + " (first track of playlist: " + playlist.getName() + ")");
 
-                play(channel.getGuild(), musicManager, firstTrack);
+                play(channel.getGuild(), musicManager, firstTrack, activationUser);
             }
 
             @Override
@@ -80,8 +81,8 @@ public class MusicHandler {
         });
     }
 
-    private void play(Guild guild, GuildMusicManager musicManager, AudioTrack track) {
-        connectToVoiceChannel(guild.getAudioManager());
+    private void play(Guild guild, GuildMusicManager musicManager, AudioTrack track, String activationUser) {
+        connectToVoiceChannel(guild.getAudioManager(), activationUser);
 
         musicManager.scheduler.queue(track);
     }
@@ -96,12 +97,17 @@ public class MusicHandler {
         musicManager.scheduler.nextTrack();
     }
 
-    private void connectToVoiceChannel(AudioManager audioManager) {
+    private void connectToVoiceChannel(AudioManager audioManager, String activationUser) {
         if (!audioManager.isConnected()) {
             for (VoiceChannel voiceChannel : audioManager.getGuild().getVoiceChannels()) {
                 if (!voiceChannel.getMembers().isEmpty()) {
-                    audioManager.openAudioConnection(voiceChannel);
-                    break;
+                    for (Member member : voiceChannel.getMembers()) {
+                        if (member.getUser().getName().equals(activationUser)) {
+                            audioManager.openAudioConnection(voiceChannel);
+                            break;
+                        }
+                    }
+
                 }
             }
         }

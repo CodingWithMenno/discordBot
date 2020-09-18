@@ -89,7 +89,7 @@ public class Music extends Message {
     public void doCommand(MessageReceivedEvent event, String[] message, MusicHandler musicHandler) {
         if (message[0].equals("m")) {   // Voor muziek commands
             if (message[1].equals("play")) {
-                musicHandler.loadAndPlay(event.getTextChannel(), message[2]);
+                musicHandler.loadAndPlay(event.getTextChannel(), message[2], event.getMember().getUser().getName());
             } else if (message[1].equals("skip")) {
                 musicHandler.skipTrack(event.getTextChannel());
             } else if (message[1].equals("leave")) {
@@ -128,7 +128,7 @@ public class Music extends Message {
                     }
 
                     for (String url : userPlaylist.getVideoURLs()) {
-                        musicHandler.loadAndPlay(event.getTextChannel(), url);
+                        musicHandler.loadAndPlay(event.getTextChannel(), url, event.getMember().getUser().getName());
                     }
                 }
 
@@ -143,7 +143,7 @@ public class Music extends Message {
                     ArrayList<String> shuffledList = userPlaylist.getVideoURLs();
                     Collections.shuffle(shuffledList);
                     for (String url : shuffledList) {
-                        musicHandler.loadAndPlay(event.getTextChannel(), url);
+                        musicHandler.loadAndPlay(event.getTextChannel(), url, event.getMember().getUser().getName());
                     }
                 }
 
@@ -155,7 +155,14 @@ public class Music extends Message {
                         return;
                     }
 
-                    boolean added = userPlaylist.addURL(message[3]);
+                    boolean added = false;
+                    try {
+                        added = userPlaylist.addURL(message[3]);
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        sendMessage(event.getTextChannel(), "Error", "No song included in command");
+                        return;
+                    }
+
 
                     if (added) {
                         sendMessage(event.getTextChannel(), "", "Added a new song to your playlist");
@@ -173,7 +180,13 @@ public class Music extends Message {
                         return;
                     }
 
-                    boolean removed = userPlaylist.removeURL(message[3]);
+                    boolean removed = false;
+                    try {
+                        removed = userPlaylist.removeURL(message[3]);
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        sendMessage(event.getTextChannel(), "Error", "No song included in command");
+                        return;
+                    }
 
                     if (removed) {
                         sendMessage(event.getTextChannel(), "", "The song has been removed from your playlist");
@@ -208,11 +221,11 @@ public class Music extends Message {
                         event.getChannel().sendMessage(playlist).queue();
                     }
                 } else {
-                    sendMessage(event.getTextChannel(), "Error", "I did not recognise this command, type **\"gamer commands\"** to see all my commands");
+                    sendMessage(event.getTextChannel(), "Error", "I did not recognise this command, type **\"" + MainHandler.PREFIX + " commands\"** to see all my commands");
                 }
 
             } else {
-                sendMessage(event.getTextChannel(), "Error", "I did not recognise this command, type **\"gamer commands\"** to see all my commands");
+                sendMessage(event.getTextChannel(), "Error", "I did not recognise this command, type **\"" + MainHandler.PREFIX + " commands\"** to see all my commands");
             }
         }
     }

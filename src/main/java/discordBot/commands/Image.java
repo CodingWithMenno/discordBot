@@ -8,15 +8,12 @@ import java.awt.*;
 
 public class Image extends Message {
 
-    private APIHandler apiHandler;
-
     public Image(String answerString, String description) {
         super(answerString, description);
-        this.apiHandler = new APIHandler();
     }
 
-    public void doCommand(TextChannel textChannel) {
-        String[] meme = this.apiHandler.getRandomImage();
+    public void doCommand(TextChannel textChannel, APIHandler apiHandler) {
+        String[] meme = apiHandler.getRandomImage();
 
         if (meme == null) {
             sendMessage(textChannel, "Error", "Random image not found");
