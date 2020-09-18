@@ -1,4 +1,4 @@
-package commands;
+package discordBot.commands;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -61,6 +61,4 @@ public abstract class Message {
         embed.setTitle(title);
         textChannel.sendMessage(embed.build()).queue();
     }
-
-    abstract boolean doCommand(TextChannel textChannel);
 }

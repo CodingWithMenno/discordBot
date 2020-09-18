@@ -1,4 +1,4 @@
-package commands;
+package discordBot.commands;
 
 import net.dv8tion.jda.api.entities.TextChannel;
 
@@ -8,9 +8,7 @@ public class Coinflip extends Message {
         super(answerArray, description);
     }
 
-    @Override
-    public boolean doCommand(TextChannel textChannel) {
+    public void doCommand(TextChannel textChannel) {
         sendMessage(textChannel, "", getAnswerString());
-        return true;
     }
 }
