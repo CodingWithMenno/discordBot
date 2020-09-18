@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.managers.AudioManager;
 
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -117,11 +118,13 @@ public class MusicHandler {
     }
 
     public void emptyQeue(TextChannel textChannel) {
-        getGuildAudioPlayer(textChannel.getGuild()).emptyQeue();
+        GuildMusicManager musicManager = getGuildAudioPlayer(textChannel.getGuild());
+        musicManager.scheduler.emptyQeue();
     }
 
     private void sendMessage(TextChannel textChannel, String title, String message) {
         EmbedBuilder embed = new EmbedBuilder();
+        embed.setColor(new Color(50,205,50));
 
         if (title.isEmpty()) {
             embed.setDescription(message);

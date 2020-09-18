@@ -1,3 +1,5 @@
+package discordBot;
+
 import java.util.Random;
 
 public class Message {
