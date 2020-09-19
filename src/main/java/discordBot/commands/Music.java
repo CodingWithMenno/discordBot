@@ -89,6 +89,11 @@ public class Music extends Message {
     public void doCommand(MessageReceivedEvent event, String[] message, MusicHandler musicHandler) {
         if (message[0].equals("m")) {   // Voor muziek commands
             if (message[1].equals("play")) {
+                if (!message[2].startsWith("https")) {
+                    sendMessage(event.getTextChannel(), "Error", "This is not a URL");
+                    return;
+                }
+
                 musicHandler.loadAndPlay(event.getTextChannel(), message[2], event.getMember().getUser().getName());
             } else if (message[1].equals("skip")) {
                 musicHandler.skipTrack(event.getTextChannel());
@@ -110,7 +115,9 @@ public class Music extends Message {
 
                     ArrayList<String> videoURLs = new ArrayList<>();
                     for (int i = 3; i < message.length; i++) {
-                        videoURLs.add(message[i]);
+                        if (message[i].startsWith("https") && !videoURLs.contains(message[i])) {
+                            videoURLs.add(message[i]);
+                        }
                     }
 
                     this.customPlaylists.add(new MusicPlaylist(username, videoURLs));
@@ -152,6 +159,11 @@ public class Music extends Message {
 
                     if (userPlaylist == null) {
                         sendNoPlaylist(event);
+                        return;
+                    }
+
+                    if (!message[3].startsWith("https")) {
+                        sendMessage(event.getTextChannel(), "Error", "This is not a URL");
                         return;
                     }
 

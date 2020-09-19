@@ -29,6 +29,7 @@ public class MainHandler extends ListenerAdapter {
      *  -Custom status toevoegen voor de bot
      *  -Een line van rik invoegen
      *  -Volume control
+     *  -Pauze command voor muziek
      *  -admin commands maken (te doen met Guild class)
      *
      *  -Readme.md verbeteren
@@ -40,7 +41,7 @@ public class MainHandler extends ListenerAdapter {
     private static JDA jda;
 
     public static final String PREFIX = "gamer ";     // Start command voor de bot
-    private HashMap<String, Message> messages;
+    private HashMap<String, String> messages;
 
     private APIHandler apiHandler;
     private ArrayList<String> blackListedWords;
@@ -119,11 +120,11 @@ public class MainHandler extends ListenerAdapter {
 
         String prefixMessage = event.getMessage().getContentDisplay().toLowerCase();
 
-        if (!prefixMessage.startsWith(this.PREFIX)) {
+        if (!prefixMessage.startsWith(PREFIX)) {
             return;
         }
 
-        String[] message = event.getMessage().getContentDisplay().substring(this.PREFIX.length()).split(" ");
+        String[] message = event.getMessage().getContentDisplay().substring(PREFIX.length()).split(" ");
 
         handleMessage(event, message);
     }
@@ -134,7 +135,7 @@ public class MainHandler extends ListenerAdapter {
 
         switch (commando) {
             case "commands":    String command = "commands";
-                                event.getTextChannel().sendMessage(this.messages.get(command).getAnswerString()).queue();
+                                event.getTextChannel().sendMessage(this.messages.get(command)).queue();
                                 return;
             case "ping":        this.pingCommand.doCommand(event.getTextChannel()); return;
             case "coinflip":    this.coinflipCommand.doCommand(event.getTextChannel()); return;
@@ -170,51 +171,51 @@ public class MainHandler extends ListenerAdapter {
         this.messages = new LinkedHashMap<>();
 
 
-        this.messages.put("coinflip", new Message(new String[]{munt, munt, munt, munt, munt, munt, munt, munt, kop, kop, kop, kop, kop, kop, kop, kop, kant}, "Returns heads or tails"));
+        this.messages.put("coinflip", "Returns heads or tails");
 
-        this.messages.put("ping", new Message(new String[]{"No :(", "Pong!", "Oke boomer"}, "Pong"));
+        this.messages.put("ping", "Pong");
 
-        this.messages.put("temp <city>", new Message("In <city> is het <celsius> graden", "Shows the temperature of the city (only in the Netherlands) by typing a city after the command"));
+        this.messages.put("temp <city>", "Shows the temperature of the city (only in the Netherlands) by typing a city after the command");
 
-        this.messages.put("image", new Message("<ImageURL>", "Returns a random image from the subreddet r/funny"));
+        this.messages.put("image", "Returns a random image from the subreddet r/funny");
 
-        this.messages.put("suggestion <suggestion>", new Message("Thanks for the suggestion :)", "Type a new command suggestion after this command and maybe it will be implemented"));
+        this.messages.put("suggestion <suggestion>", "Type a new command suggestion after this command and maybe it will be implemented");
 
-        this.messages.put("spam <name>", new Message("@<name> @<name> @<name> ...", "This command will spam a person so he/she will not ignore you anymore :) (Only for \"Spammers\")"));
+        this.messages.put("spam <name>", "This command will spam a person so he/she will not ignore you anymore :) (Only for \"Spammers\")");
 
-        this.messages.put("jeff", new Message("My name is Jeff", "My name is Jeff (Only works when in voice channel)"));
+        this.messages.put("jeff", "My name is Jeff (Only works when in voice channel)");
 
-        this.messages.put("m play <URL>", new Message("*Plays song*", "Type a youtube url after this command to play this video"));
+        this.messages.put("m play <URL>", "Type a youtube url after this command to play this video");
 
-        this.messages.put("m skip", new Message("*Skips a song*", "Skips the current playing video and plays the next one"));
+        this.messages.put("m skip", "Skips the current playing video and plays the next one");
 
-        this.messages.put("m leave", new Message("*Leaves channel", "The bot will leave the channel its in"));
+        this.messages.put("m leave", "The bot will leave the channel its in");
 
-        this.messages.put("m p create <URL1> ...", new Message("Custom playlist created", "Creates a custom playlist saves it with the users name"));
+        this.messages.put("m p create <URL1> ...", "Creates a custom playlist and saves it with the user's name");
 
-        this.messages.put("m p delete", new Message("Deleted your custom playlist", "Deletes your custom playlist"));
+        this.messages.put("m p delete", "Deletes your custom playlist");
 
-        this.messages.put("m p play", new Message("Playing your custom playlist", "This command will play your custom saved playlist"));
+        this.messages.put("m p play", "This command will play your custom saved playlist");
 
-        this.messages.put("m p shuffle", new Message("Shuffles and plays your custom playlist", "This command will shuffle and play your custom playlist"));
+        this.messages.put("m p shuffle", "This command will shuffle and play your custom playlist");
 
-        this.messages.put("m p add <URL>", new Message("New song added to your custom playlist", "Adds the url behind the command to your playlist"));
+        this.messages.put("m p add <URL>", "Adds the url behind the command to your custom playlist");
 
-        this.messages.put("m p remove <URL>", new Message("Removed a url from your custom playlist", "Removes a url from your custom playlist"));
+        this.messages.put("m p remove <URL>", "Removes a url from your custom playlist");
 
-        this.messages.put("m p show", new Message("*Shows all songs in your custom playlist*", "Shows all songs in your custom playlist"));
+        this.messages.put("m p show", "Shows all songs in your custom playlist");
 
-        String allCommands = "```**ALL COMMANDS**\n----------------------------------------------------------------------------\n<Activation keyword = \"" + this.PREFIX +"\">\n\n";
+        String allCommands = "```ALL COMMANDS\n----------------------------------------------------------------------------\n<Activation keyword = \"" + PREFIX +"\">\n\n";
         for (String activationString : this.messages.keySet()) {
             allCommands += activationString.toUpperCase();
             int totalSpaces = 32 - activationString.length();
             for (int i = 0; i < totalSpaces; i++) {
                 allCommands += " ";
             }
-            allCommands += "=   " + this.messages.get(activationString).getDescription() + "\n";
+            allCommands += "=   " + this.messages.get(activationString) + "\n";
         }
-        allCommands += "```";
-        this.messages.put("commands", new Message(allCommands, "Shows all the commands"));
+        allCommands += "\n----------------------------------------------------------------------------\nMade by: Menno Bil```";
+        this.messages.put("commands", allCommands);
     }
 
     private void setBlacklistWords() {
