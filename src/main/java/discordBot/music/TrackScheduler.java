@@ -12,6 +12,7 @@ public class TrackScheduler extends AudioEventAdapter {
 
     private final AudioPlayer player;
     private final BlockingQueue<AudioTrack> queue;
+    private AudioTrack current;
 
     /**
      * @param player The audio player this scheduler uses
@@ -19,6 +20,7 @@ public class TrackScheduler extends AudioEventAdapter {
     public TrackScheduler(AudioPlayer player) {
         this.player = player;
         this.queue = new LinkedBlockingQueue<>();
+        this.current = null;
     }
 
     /**
@@ -41,7 +43,15 @@ public class TrackScheduler extends AudioEventAdapter {
     public void nextTrack() {
         // Start the next track, regardless of if something is already playing or not. In case queue was empty, we are
         // giving null to startTrack, which is a valid argument and will simply stop the player.
-        player.startTrack(queue.poll(), false);
+        try {
+            player.startTrack(queue.poll(), false);
+        } catch (NullPointerException e) {
+            System.out.println("There are no more tracks to play");
+        }
+    }
+
+    public void onTrackStart(AudioPlayer player, AudioTrack track) {
+        this.current = track;
     }
 
     @Override
@@ -49,10 +59,17 @@ public class TrackScheduler extends AudioEventAdapter {
         // Only start the next track if the end reason is suitable for it (FINISHED or LOAD_FAILED)
         if (endReason.mayStartNext) {
             nextTrack();
+
         }
     }
 
+
+
     public void emptyQeue() {
         queue.clear();
+    }
+
+    public AudioTrack getCurrentSong() {
+        return current;
     }
 }

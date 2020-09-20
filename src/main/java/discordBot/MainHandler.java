@@ -24,12 +24,12 @@ public class MainHandler extends ListenerAdapter {
 
     /** TO DO:
      *  -Easter eggs toevoegen
-     *  -User can make custom commands
      *  -Een game toevoegen (trivia bv)
      *  -Custom status toevoegen voor de bot
      *  -Een line van rik invoegen
      *  -Volume control
      *  -Pauze command voor muziek
+     *  -Vertellen wat het nieuwe lied is wanneer een nieuw lied start
      *  -admin commands maken (te doen met Guild class)
      *
      *  -Readme.md verbeteren
@@ -116,7 +116,7 @@ public class MainHandler extends ListenerAdapter {
             return;
         }
 
-        System.out.println("discordBot.Message received from: " + event.getAuthor().getName() + " : " + event.getMessage().getContentDisplay());
+        System.out.println("Message received from: " + event.getAuthor().getName() + " : " + event.getMessage().getContentDisplay());
 
         String prefixMessage = event.getMessage().getContentDisplay().toLowerCase();
 
@@ -186,6 +186,8 @@ public class MainHandler extends ListenerAdapter {
         this.messages.put("jeff", "My name is Jeff (Only works when in voice channel)");
 
         this.messages.put("m play <URL>", "Type a youtube url after this command to play this video");
+
+        this.messages.put("m current", "Shows the current playing song");
 
         this.messages.put("m skip", "Skips the current playing video and plays the next one");
 

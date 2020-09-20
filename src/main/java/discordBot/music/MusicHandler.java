@@ -128,7 +128,18 @@ public class MusicHandler {
         musicManager.scheduler.emptyQeue();
     }
 
-    private void sendMessage(TextChannel textChannel, String title, String message) {
+    public void getCurrentSong(TextChannel textChannel) {
+        GuildMusicManager musicManager = getGuildAudioPlayer(textChannel.getGuild());
+        AudioTrack audioTrack = musicManager.scheduler.getCurrentSong();
+        if (audioTrack == null) {
+            sendMessage(textChannel, "Error", "There is currently no song playing");
+            return;
+        }
+
+        sendMessage(textChannel, audioTrack.getInfo().title, "Current song playing: " + audioTrack.getInfo().uri);
+    }
+
+    private static void sendMessage(TextChannel textChannel, String title, String message) {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setColor(new Color(50,205,50));
 

@@ -101,6 +101,8 @@ public class Music extends Message {
                 musicHandler.emptyQeue(event.getTextChannel());
                 musicHandler.skip(event.getTextChannel());
                 musicHandler.leaveChannel(event.getTextChannel());
+            } else if (message[1].equals("current")) {
+                musicHandler.getCurrentSong(event.getTextChannel());
             }
 
             else if (message[1].equals("p")) {   // Voor de custom playlists
