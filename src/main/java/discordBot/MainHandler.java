@@ -27,7 +27,6 @@ public class MainHandler extends ListenerAdapter {
      *  -Een game toevoegen (trivia bv)
      *  -Custom status toevoegen voor de bot
      *  -Een line van rik invoegen
-     *  -Volume control
      *  -Pauze command voor muziek
      *  -Vertellen wat het nieuwe lied is wanneer een nieuw lied start
      *  -admin commands maken (te doen met Guild class)
@@ -192,6 +191,10 @@ public class MainHandler extends ListenerAdapter {
         this.messages.put("m skip", "Skips the current playing video and plays the next one");
 
         this.messages.put("m leave", "The bot will leave the channel its in");
+
+        this.messages.put("m volUp", "Turns the volume of the bot up");
+
+        this.messages.put("m volDown", "Turns the volume of the bot down");
 
         this.messages.put("m p create <URL1> ...", "Creates a custom playlist and saves it with the user's name");
 

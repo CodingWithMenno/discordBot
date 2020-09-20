@@ -123,6 +123,30 @@ public class MusicHandler {
         sendMessage(textChannel, "", "* EpicGamerBot drops mic *");
     }
 
+    public void turnVolumeUp(TextChannel textChannel) {
+        GuildMusicManager musicManager = getGuildAudioPlayer(textChannel.getGuild());
+        int volume = musicManager.turnVolumeUp();
+
+        if (volume == -1) {
+            sendMessage(textChannel, "Error", "There is nothing playing right now");
+            return;
+        }
+
+        sendMessage(textChannel, "Volume", "Current volume is: " + volume);
+    }
+
+    public void turnVolumeDown(TextChannel textChannel) {
+        GuildMusicManager musicManager = getGuildAudioPlayer(textChannel.getGuild());
+        int volume = musicManager.turnVolumeDown();
+
+        if (volume == -1) {
+            sendMessage(textChannel, "Error", "There is nothing playing right now");
+            return;
+        }
+
+        sendMessage(textChannel, "Volume", "Current volume is: " + volume);
+    }
+
     public void emptyQeue(TextChannel textChannel) {
         GuildMusicManager musicManager = getGuildAudioPlayer(textChannel.getGuild());
         musicManager.scheduler.emptyQeue();

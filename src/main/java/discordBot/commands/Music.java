@@ -103,6 +103,10 @@ public class Music extends Message {
                 musicHandler.leaveChannel(event.getTextChannel());
             } else if (message[1].equals("current")) {
                 musicHandler.getCurrentSong(event.getTextChannel());
+            } else if (message[1].equals("volUp")) {
+                musicHandler.turnVolumeUp(event.getTextChannel());
+            } else if (message[1].equals("volDown")) {
+                musicHandler.turnVolumeDown(event.getTextChannel());
             }
 
             else if (message[1].equals("p")) {   // Voor de custom playlists
