@@ -123,28 +123,18 @@ public class MusicHandler {
         sendMessage(textChannel, "", "* EpicGamerBot drops mic *");
     }
 
-    public void turnVolumeUp(TextChannel textChannel) {
-        GuildMusicManager musicManager = getGuildAudioPlayer(textChannel.getGuild());
-        int volume = musicManager.turnVolumeUp();
+    public void setVolume(TextChannel textChannel, int volume) {
+        volume = Math.min(Math.max(volume, 0), 1000);
 
-        if (volume == -1) {
+        GuildMusicManager musicManager = getGuildAudioPlayer(textChannel.getGuild());
+        int newVolume = musicManager.setVolume(volume);
+
+        if (newVolume == -1) {
             sendMessage(textChannel, "Error", "There is nothing playing right now");
             return;
         }
 
-        sendMessage(textChannel, "Volume", "Current volume is: " + volume);
-    }
-
-    public void turnVolumeDown(TextChannel textChannel) {
-        GuildMusicManager musicManager = getGuildAudioPlayer(textChannel.getGuild());
-        int volume = musicManager.turnVolumeDown();
-
-        if (volume == -1) {
-            sendMessage(textChannel, "Error", "There is nothing playing right now");
-            return;
-        }
-
-        sendMessage(textChannel, "Volume", "Current volume is: " + volume);
+        sendMessage(textChannel, "Volume", "Current volume is: " + newVolume);
     }
 
     public void emptyQeue(TextChannel textChannel) {
@@ -161,6 +151,13 @@ public class MusicHandler {
         }
 
         sendMessage(textChannel, audioTrack.getInfo().title, "Current song playing: " + audioTrack.getInfo().uri);
+    }
+
+    public void setLooping(TextChannel textChannel, boolean looping) {
+        GuildMusicManager musicManager = getGuildAudioPlayer(textChannel.getGuild());
+        musicManager.scheduler.setLooping(looping);
+
+        sendMessage(textChannel, "Looping Mode", "Looping mode is set to: " + looping);
     }
 
     private static void sendMessage(TextChannel textChannel, String title, String message) {

@@ -103,10 +103,23 @@ public class Music extends Message {
                 musicHandler.leaveChannel(event.getTextChannel());
             } else if (message[1].equals("current")) {
                 musicHandler.getCurrentSong(event.getTextChannel());
-            } else if (message[1].equals("volUp")) {
-                musicHandler.turnVolumeUp(event.getTextChannel());
-            } else if (message[1].equals("volDown")) {
-                musicHandler.turnVolumeDown(event.getTextChannel());
+            } else if (message[1].equals("loop")) {
+                try {
+                    boolean willLoop = Boolean.parseBoolean(message[2]);
+                    musicHandler.setLooping(event.getTextChannel(), willLoop);
+                } catch (Exception e) {
+                    sendMessage(event.getTextChannel(), "Error", "Something went wrong while setting up the loop mode");
+                }
+
+            } else if (message[1].equals("vol")) {
+                int volume;
+                try {
+                    volume = Integer.parseInt(message[2]);
+                } catch (NumberFormatException e) {
+                    sendMessage(event.getTextChannel(), "Error", "This is not a valid argument for setting the volume. The correct range is between 0-1000");
+                    return;
+                }
+                musicHandler.setVolume(event.getTextChannel(), volume);
             }
 
             else if (message[1].equals("p")) {   // Voor de custom playlists

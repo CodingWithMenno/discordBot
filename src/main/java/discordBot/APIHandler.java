@@ -55,7 +55,7 @@ public class APIHandler {
 //        }
 //    }
 
-    public String[] getRandomImage() {    // Maakt gebruik van API van stan
+    public String[] getRandomImage() {    // Maakt gebruik van de API van stan
         try {
             JSONObject jObject = getAPI("http://h2892166.stratoserver.net/api/meme/?subs=funny");
             JSONObject article = jObject.getJSONObject("article");

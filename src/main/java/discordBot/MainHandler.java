@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import javax.security.auth.login.LoginException;
 import java.awt.*;
@@ -23,14 +24,14 @@ public class MainHandler extends ListenerAdapter {
 
 
     /** TO DO:
-     *  -Easter eggs toevoegen
      *  -Een game toevoegen (trivia bv)
      *  -Custom status toevoegen voor de bot
-     *  -Een line van rik invoegen
      *  -Pauze command voor muziek
      *  -Vertellen wat het nieuwe lied is wanneer een nieuw lied start
      *  -admin commands maken (te doen met Guild class)
      *
+     *  -AI learning toepassen: https://github.com/gunthercox/ChatterBot
+     *  -Toevoegen aan de bot dat je alleen aan de bot mag zitten als je in hetzelfde kanaal als be bot zit
      *  -Readme.md verbeteren
      */
 
@@ -67,6 +68,7 @@ public class MainHandler extends ListenerAdapter {
                     .addEventListeners(mainHandler)
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES)
+                    .setActivity(Activity.watching("hentai"))
                     .build();
         } catch (LoginException e) {
             e.printStackTrace();
@@ -106,7 +108,6 @@ public class MainHandler extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {     // Word aangeroepen als een bericht binnenkomt
-
         if (event.getAuthor().isBot()) {        // Tegen oneindige loops
             return;
         }
@@ -129,7 +130,6 @@ public class MainHandler extends ListenerAdapter {
     }
 
     private void handleMessage(MessageReceivedEvent event, String[] message) {
-
         String commando = message[0].toLowerCase();
 
         switch (commando) {
@@ -190,13 +190,13 @@ public class MainHandler extends ListenerAdapter {
 
         this.messages.put("m skip", "Skips the current playing video and plays the next one");
 
+        this.messages.put("m vol <number>", "Sets the volume of the bot between 0-1000");
+
+        this.messages.put("m loop <true/false>", "Will set the looping mode of the bot to true or false");
+
         this.messages.put("m leave", "The bot will leave the channel its in");
 
-        this.messages.put("m volUp", "Turns the volume of the bot up");
-
-        this.messages.put("m volDown", "Turns the volume of the bot down");
-
-        this.messages.put("m p create <URL1> ...", "Creates a custom playlist and saves it with the user's name");
+        this.messages.put("m p create <URL1> <URL2> ...", "Creates a custom playlist and saves it with the user's name");
 
         this.messages.put("m p delete", "Deletes your custom playlist");
 

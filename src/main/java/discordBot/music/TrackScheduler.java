@@ -13,6 +13,7 @@ public class TrackScheduler extends AudioEventAdapter {
     private final AudioPlayer player;
     private final BlockingQueue<AudioTrack> queue;
     private AudioTrack current;
+    private boolean isLooping;
 
     /**
      * @param player The audio player this scheduler uses
@@ -21,6 +22,7 @@ public class TrackScheduler extends AudioEventAdapter {
         this.player = player;
         this.queue = new LinkedBlockingQueue<>();
         this.current = null;
+        this.isLooping = false;
     }
 
     /**
@@ -50,6 +52,16 @@ public class TrackScheduler extends AudioEventAdapter {
         }
     }
 
+    private void playCurrentSong() {
+        try {
+            AudioTrack songReloaded = this.current.makeClone();
+            player.startTrack(songReloaded, false);
+        } catch (NullPointerException e) {
+            System.out.println("There are no more tracks to play");
+        }
+    }
+
+    @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         this.current = track;
     }
@@ -58,11 +70,15 @@ public class TrackScheduler extends AudioEventAdapter {
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         // Only start the next track if the end reason is suitable for it (FINISHED or LOAD_FAILED)
         if (endReason.mayStartNext) {
+
+            if (this.isLooping) {
+                playCurrentSong();
+                return;
+            }
+
             nextTrack();
         }
     }
-
-
 
     public void emptyQeue() {
         queue.clear();
@@ -70,5 +86,9 @@ public class TrackScheduler extends AudioEventAdapter {
 
     public AudioTrack getCurrentSong() {
         return current;
+    }
+
+    public void setLooping(boolean looping) {
+        isLooping = looping;
     }
 }

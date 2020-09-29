@@ -35,21 +35,12 @@ public class GuildMusicManager {
         this.scheduler.emptyQeue();
     }
 
-    public int turnVolumeUp() {
+    public int setVolume(int volume) {
         if (player.getPlayingTrack() == null) {
             return -1;
         }
 
-        this.player.setVolume((int) (this.player.getVolume() * 1.4));
-        return this.player.getVolume();
-    }
-
-    public int turnVolumeDown() {
-        if (player.getPlayingTrack() == null) {
-            return -1;
-        }
-
-        this.player.setVolume((int) (this.player.getVolume() * 0.6));
+        this.player.setVolume(volume);
         return this.player.getVolume();
     }
 }
